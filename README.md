@@ -168,26 +168,21 @@ in **[docs/VPS-GUIDE.md](./docs/VPS-GUIDE.md)**.
 
 ### Step 4 — Install (one command)
 
-SSH into your server (`ssh root@YOUR_SERVER_IP`), get the pw0d code onto it, then
-run the installer:
+SSH into your server (`ssh root@YOUR_SERVER_IP`), grab the code, and run the
+installer — match the install command to your Step 2 choice:
 
 ```bash
-# Get the code (pick one):
-#   A) from a private GitHub repo you pushed it to:
-git clone https://github.com/<you>/pw0d.git && cd pw0d
-#   B) or copy from your computer (run THIS on your computer, not the server):
-#   rsync -az --exclude node_modules --exclude .next --exclude .output \
-#     --exclude data --exclude .git pw0d/ root@YOUR_SERVER_IP:/root/pw0d/   # then: cd /root/pw0d
+apt-get update && apt-get install -y git
+git clone https://github.com/mikebpech/pw0d.git && cd pw0d
 
-# Then, on the server, run ONE of these:
 bash deploy/install.sh vault.yourdomain.com   # Option A — your domain
 bash deploy/install.sh                         # Option B — free sslip.io URL
 bash deploy/install.sh --self-signed           # Option C — self-signed on the IP
 ```
 
 The installer sets up Docker, opens the server firewall, builds pw0d, and starts
-it with automatic HTTPS. The first build takes a few minutes, then it prints your
-URL.
+it with automatic HTTPS. The first build takes a few minutes (on a 1 GB or
+smaller server, add swap first — see the guide), then it prints your URL.
 
 ### Step 5 — First run
 

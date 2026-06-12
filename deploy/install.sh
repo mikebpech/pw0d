@@ -71,7 +71,13 @@ fi
 
 echo "==> [3/4] Building and starting pw0d for https://$DOMAIN ..."
 cd docker
-PW0D_DOMAIN="$DOMAIN" docker compose up -d --build
+# Write .env so every future `docker compose` command in this folder picks up
+# the domain automatically — no need to prefix PW0D_DOMAIN each time.
+cat > .env <<EOF
+PW0D_DOMAIN=$DOMAIN
+SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-true}
+EOF
+docker compose up -d --build
 
 echo "==> [4/4] Waiting for the app to come up..."
 for i in $(seq 1 30); do
@@ -95,7 +101,13 @@ cat <<EOF
   Then close signups so nobody else can register:
 
       cd $(pwd)
-      SIGNUPS_ALLOWED=false PW0D_DOMAIN=$DOMAIN docker compose up -d
+      sed -i 's/SIGNUPS_ALLOWED=true/SIGNUPS_ALLOWED=false/' .env
+      docker compose up -d
+
+  Manage it anytime from this folder (the domain is remembered in .env):
+      docker compose ps          # status
+      docker compose logs -f     # live logs
+      docker compose down        # stop
 
   Point your browser extension (and phone, later) at:
       https://$DOMAIN

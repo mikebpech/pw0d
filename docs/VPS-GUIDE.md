@@ -114,41 +114,21 @@ DO droplets also default to open. To add a firewall:
 
 ## Step 4 — Get pw0d onto the server and start it
 
-**SSH into the server** from your Mac (replace the IP):
+**SSH into the server** (replace with your server's IP):
 
 ```bash
 ssh root@203.0.113.42
 ```
 
-Now get the pw0d code onto the box. Pick one:
+Clone the repo and step into it:
 
-### Option A — From GitHub (best, makes updates trivial)
-One-time, on your **Mac**, push the project to a **private** GitHub repo:
-```bash
-cd ~/Development/sideprojects/pw0d
-gh repo create pw0d --private --source=. --push   # needs the GitHub CLI
-# (or create a repo on github.com and: git remote add origin <url> && git push -u origin main)
-```
-Then on the **server**:
 ```bash
 apt-get update && apt-get install -y git
-git clone https://github.com/<your-username>/pw0d.git
+git clone https://github.com/mikebpech/pw0d.git
 cd pw0d
 ```
 
-### Option B — Copy straight from your Mac (no GitHub)
-In a **new terminal on your Mac** (not the SSH session):
-```bash
-cd ~/Development/sideprojects
-rsync -az --exclude node_modules --exclude .next --exclude .output \
-  --exclude data --exclude .git pw0d/ root@203.0.113.42:/root/pw0d/
-```
-Then back in the **SSH session**:
-```bash
-cd /root/pw0d
-```
-
-### Run the installer (either option above lands you in the pw0d folder)
+### Run the installer
 
 Match this to your Step 2 choice:
 ```bash
@@ -191,9 +171,11 @@ Done — your passwords now live on a server you control, reachable anywhere.
 
 ## Keeping it running
 
-**Updates** (when you change the code):
-- GitHub: on the server, `cd ~/pw0d && git pull && cd docker && PW0D_DOMAIN=vault.yourdomain.com docker compose up -d --build`
-- rsync: re-run the rsync from your Mac, then the same compose command.
+**Updates** — on the server, pull the latest and rebuild:
+```bash
+cd ~/pw0d && git pull && cd docker && docker compose up -d --build
+```
+(The domain is remembered in `docker/.env`, so no need to pass it again.)
 
 **Backups** — everything is in one Docker volume (`pw0d-data`):
 ```bash

@@ -2,6 +2,9 @@
 # Build from the REPO ROOT:  docker build -f apps/web/Dockerfile -t pw0d .
 
 FROM node:24-alpine AS builder
+# Raise Node's heap ceiling so the build/type-check can use swap on tiny boxes
+# (512 MB droplets otherwise OOM during the TypeScript phase of `next build`).
+ENV NODE_OPTIONS=--max-old-space-size=2048
 RUN corepack enable
 WORKDIR /app
 COPY . .
