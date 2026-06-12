@@ -95,6 +95,11 @@ export default function LoginPage() {
           Recover with a code
         </Link>
       </p>
+      <p className="mt-1 text-center text-xs text-muted-foreground/70">
+        <Link href="/install" className="underline-offset-4 hover:text-foreground hover:underline">
+          Get the browser extension →
+        </Link>
+      </p>
     </AuthShell>
   );
 }

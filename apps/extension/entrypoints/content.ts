@@ -151,9 +151,17 @@ export default defineContentScript({
 
     async function maybeShowMenu(input: HTMLInputElement): Promise<void> {
       const state = await safeSend({ type: "menuState", url: location.href });
-      if (!state || state.status === "logged-out") return;
+      if (!state || state.status === "logged-out" || state.disabled) return;
       const { status, matches, suggestions } = state;
       const isPassword = input.type === "password";
+
+      // "Turn off on this site" — wired into every unlocked menu's footer.
+      const disableSite = async () => {
+        await safeSend({ type: "setSiteDisabled", url: location.href, disabled: true });
+        iconStatusCache = null; // force icons to clear on next tick
+        ui.syncIcons([], () => {});
+        ui.hideMenu();
+      };
 
       if (status === "locked") {
         activeInput = input;
@@ -237,6 +245,7 @@ export default defineContentScript({
           }
           ui.hideMenu();
         },
+        onDisableSite: disableSite,
       };
 
       if (mode === "signup") {
@@ -362,27 +371,44 @@ export default defineContentScript({
     }, true);
 
     // ---------- in-field pw0d icons ----------
+    // Only on FIELDS WE'D ACT ON — like NordPass/1Password, not every input:
+    //   · every visible password field
+    //   · the username field paired with each password field
+    //   · fields explicitly marked autocomplete="username" (username-first flows)
+    //   · 2FA code inputs
+    // A standalone email/text box (newsletter, search) gets no icon.
 
-    function loginishInputs(): HTMLInputElement[] {
-      return allInputsDeep()
-        .filter((input) => visible(input) && isLoginish(input))
-        .slice(0, 8);
+    function iconTargets(): HTMLInputElement[] {
+      const targets = new Set<HTMLInputElement>();
+      for (const pw of passwordFields()) {
+        targets.add(pw);
+        const user = usernameFieldFor(pw);
+        if (user) targets.add(user);
+      }
+      for (const input of allInputsDeep()) {
+        if (!visible(input)) continue;
+        const autocomplete = (input.autocomplete || "").toLowerCase();
+        if (autocomplete === "username" || autocomplete.includes("webauthn")) targets.add(input);
+        if (isOtpField(input)) targets.add(input);
+      }
+      return [...targets].slice(0, 6);
     }
 
-    let iconStatusCache: { status: string; at: number } | null = null;
+    let iconStatusCache: { status: string; disabled: boolean; at: number } | null = null;
 
     async function refreshIcons(): Promise<void> {
       const now = Date.now();
       if (!iconStatusCache || now - iconStatusCache.at > 5000) {
-        const state = await safeSend({ type: "getState" });
+        const state = await safeSend({ type: "siteStatus", url: location.href });
         if (!state) return;
-        iconStatusCache = { status: state.status, at: now };
+        iconStatusCache = { status: state.status, disabled: state.disabled, at: now };
       }
-      if (iconStatusCache.status === "logged-out") {
+      // No icons when logged out or when pw0d is turned off for this site.
+      if (iconStatusCache.status === "logged-out" || iconStatusCache.disabled) {
         ui.syncIcons([], () => {});
         return;
       }
-      ui.syncIcons(loginishInputs(), (input) => {
+      ui.syncIcons(iconTargets(), (input) => {
         if (ui.menuAnchor() === input) {
           ui.hideMenu();
           return;
@@ -561,6 +587,8 @@ interface MenuOptions {
   onSuggest: (value: string) => void;
   onGenerate: () => void;
   onUnlock?: () => void;
+  /** When present, the menu shows a "turn off on this site" footer. */
+  onDisableSite?: () => void;
 }
 
 export interface SaveFields {
@@ -748,6 +776,16 @@ function createUiLayer(): UiLayer {
         expand.textContent = `▸ ${options.collapsedCount} saved login${options.collapsedCount === 1 ? "" : "s"} for this site`;
         expand.addEventListener("click", () => options.onExpandMatches?.());
         menu.appendChild(expand);
+      }
+
+      // "Turn off on this site" — one-click disable, right where it's annoying you.
+      if (options.onDisableSite) {
+        const off = document.createElement("button");
+        off.type = "button";
+        off.className = "hintbtn";
+        off.textContent = "⊘ Turn off pw0d on this site";
+        off.addEventListener("click", () => options.onDisableSite?.());
+        menu.appendChild(off);
       }
       root.appendChild(menu);
 

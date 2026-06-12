@@ -243,6 +243,9 @@ function VaultScreen({ onChanged }: { onChanged: () => void }) {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [bio, setBio] = useState<"unavailable" | "off" | "on">("unavailable");
+  const [siteUrl, setSiteUrl] = useState<string | null>(null);
+  const [siteHost, setSiteHost] = useState<string | null>(null);
+  const [siteDisabled, setSiteDisabled] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const search = useCallback(async (value: string) => {
@@ -260,7 +263,27 @@ function VaultScreen({ onChanged }: { onChanged: () => void }) {
       if (!(await isBiometricsAvailable())) return;
       setBio((await getBioConfig()) ? "on" : "off");
     })();
+    // Per-site enable/disable for the active tab.
+    void (async () => {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.url || !/^https?:/.test(tab.url)) return;
+      setSiteUrl(tab.url);
+      try {
+        setSiteHost(new URL(tab.url).hostname);
+      } catch {
+        // ignore
+      }
+      const status = await sendToBackground({ type: "siteStatus", url: tab.url });
+      setSiteDisabled(status.disabled);
+    })();
   }, [search]);
+
+  async function toggleSite() {
+    if (!siteUrl) return;
+    const next = !siteDisabled;
+    await sendToBackground({ type: "setSiteDisabled", url: siteUrl, disabled: next });
+    setSiteDisabled(next);
+  }
 
   async function toggleBio() {
     try {
@@ -386,6 +409,18 @@ function VaultScreen({ onChanged }: { onChanged: () => void }) {
       </div>
 
       <div className="border-t border-border p-3">
+        {siteHost && (
+          <button
+            type="button"
+            onClick={() => void toggleSite()}
+            className="mb-2 flex w-full items-center justify-between font-mono text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            <span className="truncate">autofill on {siteHost}</span>
+            <span className={siteDisabled ? "text-destructive" : "text-primary"}>
+              {siteDisabled ? "off ›" : "on ›"}
+            </span>
+          </button>
+        )}
         {bio !== "unavailable" && (
           <button
             type="button"

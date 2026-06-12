@@ -190,7 +190,7 @@ export function ItemDetail({
   // ---------- edit mode ----------
   if (mode === "edit") {
     return (
-      <section className={cn("flex min-w-0 flex-col overflow-y-auto", className)}>
+      <section className={cn("flex min-h-0 min-w-0 flex-col overflow-y-auto", className)}>
         <div className="mx-auto w-full max-w-xl px-8 py-8">
           <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-muted-foreground">
             {creating ? `new ${TYPE_LABEL[editType]}` : `edit ${TYPE_LABEL[editType]}`}
@@ -399,7 +399,7 @@ export function ItemDetail({
     : null;
 
   return (
-    <section className={cn("flex min-w-0 flex-col overflow-y-auto", className)}>
+    <section className={cn("flex min-h-0 min-w-0 flex-col overflow-y-auto", className)}>
       <div className="mx-auto w-full max-w-xl px-8 py-8">
         <div className="mb-8 flex items-start gap-4">
           <ItemIcon

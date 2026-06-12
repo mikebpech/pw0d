@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { type ParsedImport, parseNordpassCsv } from "@/lib/nordpass";
+import { type ParsedImport, parseImport } from "@/lib/importers";
 import { useVault } from "@/lib/store";
 
 export function ImportDialog({
@@ -36,7 +36,7 @@ export function ImportDialog({
 
   async function handleFile(file: File) {
     try {
-      const result = parseNordpassCsv(await file.text());
+      const result = parseImport(await file.text(), file.name);
       if (result.items.length === 0) {
         toast.error("no importable items found in this file");
         return;
@@ -44,7 +44,7 @@ export function ImportDialog({
       setFileName(file.name);
       setParsed(result);
     } catch {
-      toast.error("couldn't parse this file — is it a NordPass CSV export?");
+      toast.error("couldn't read this file — export a CSV or JSON from your password manager");
     }
   }
 
@@ -76,7 +76,7 @@ export function ImportDialog({
     toast.success(
       `imported ${imported} item${imported === 1 ? "" : "s"}` +
         (failed ? `, ${failed} failed` : "") +
-        (parsed.skipped ? ` · ${parsed.skipped} skipped (cards/identities)` : ""),
+        (parsed.skipped ? ` · ${parsed.skipped} skipped (cards/other types)` : ""),
     );
     reset();
     onOpenChange(false);
@@ -97,10 +97,11 @@ export function ImportDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Import from NordPass</DialogTitle>
+          <DialogTitle>Import passwords</DialogTitle>
           <DialogDescription>
-            In NordPass: Settings → Export items → CSV. Everything is encrypted locally before it
-            touches the server.
+            Export a CSV (or JSON) from your current manager and drop it here — NordPass,
+            1Password, LastPass, Bitwarden, Dashlane, Chrome, and others are detected
+            automatically. Everything is encrypted locally before it touches the server.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +114,12 @@ export function ImportDialog({
           </div>
         ) : parsed ? (
           <div className="rounded-md border bg-card px-4 py-3 text-sm">
-            <div className="font-mono text-xs text-muted-foreground">{fileName}</div>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs text-muted-foreground">{fileName}</span>
+              <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-[11px] text-primary">
+                {parsed.source}
+              </span>
+            </div>
             <div className="mt-2 flex gap-4">
               <span>
                 <span className="font-mono text-lg">{logins}</span>{" "}
@@ -138,13 +144,13 @@ export function ImportDialog({
             className="flex flex-col items-center gap-2 rounded-md border border-dashed px-6 py-10 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           >
             <FileKey className="size-6" />
-            choose a .csv file
+            choose a .csv or .json file
           </button>
         )}
         <input
           ref={fileInput}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.json,text/csv,application/json"
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];

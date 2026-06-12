@@ -9,6 +9,10 @@ RUN corepack enable
 WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile
+# Package the browser extension and serve it from the web app's /install page.
+RUN pnpm --filter @pw0d/extension zip \
+    && mkdir -p apps/web/public \
+    && cp apps/extension/.output/*-chrome.zip apps/web/public/pw0d-extension.zip
 RUN pnpm --filter web build
 
 FROM node:24-alpine AS runner

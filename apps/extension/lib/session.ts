@@ -26,6 +26,7 @@ import {
   toBase64,
   unlockAccountKey,
 } from "@pw0d/crypto";
+import { hostnameOf, registrableDomain } from "./matching";
 
 const AUTO_LOCK_MINUTES = 30;
 export const LOCK_ALARM = "pw0d-lock";
@@ -90,6 +91,32 @@ async function makeClient(): Promise<ApiClient | null> {
       void getConfig().then((current) => current && setConfig({ ...current, tokens }));
     },
   });
+}
+
+// ---- per-site disable ----
+// Users can turn pw0d off on specific sites (keyed by registrable domain).
+
+function siteKey(url: string): string | null {
+  const host = hostnameOf(url);
+  if (!host) return null;
+  return registrableDomain(host) ?? host;
+}
+
+export async function isSiteDisabled(url: string): Promise<boolean> {
+  const key = siteKey(url);
+  if (!key) return false;
+  const { disabledSites } = await browser.storage.local.get("disabledSites");
+  return Array.isArray(disabledSites) && disabledSites.includes(key);
+}
+
+export async function setSiteDisabled(url: string, disabled: boolean): Promise<void> {
+  const key = siteKey(url);
+  if (!key) return;
+  const { disabledSites } = await browser.storage.local.get("disabledSites");
+  const set = new Set<string>(Array.isArray(disabledSites) ? disabledSites : []);
+  if (disabled) set.add(key);
+  else set.delete(key);
+  await browser.storage.local.set({ disabledSites: [...set] });
 }
 
 // ---- public API ----

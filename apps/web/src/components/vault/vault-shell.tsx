@@ -10,6 +10,7 @@ import {
   Lock,
   LogOut,
   MoreHorizontal,
+  Puzzle,
   Settings,
   StickyNote,
   TerminalSquare,
@@ -26,6 +27,14 @@ import { ItemList } from "@/components/vault/item-list";
 import { SettingsDialog } from "@/components/vault/settings-dialog";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -34,7 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { exportCsv, exportJson } from "@/lib/export";
-import { useVault } from "@/lib/store";
+import { type VaultFolder, useVault } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export type VaultFilter =
@@ -54,6 +63,7 @@ export function VaultShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [folderToDelete, setFolderToDelete] = useState<VaultFolder | null>(null);
 
   // Auto-lock after inactivity — the whole point of a lock screen.
   const lockTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -146,6 +156,8 @@ export function VaultShell() {
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "couldn't delete folder");
+    } finally {
+      setFolderToDelete(null);
     }
   }
 
@@ -168,7 +180,7 @@ export function VaultShell() {
   return (
     <div className="grid h-screen grid-cols-[220px_minmax(300px,360px)_1fr] overflow-hidden">
       {/* ---- sidebar ---- */}
-      <aside className="flex flex-col border-r bg-sidebar reveal">
+      <aside className="flex min-h-0 flex-col border-r bg-sidebar reveal">
         <div className="flex h-14 items-center px-4">
           <Brand className="text-lg" />
         </div>
@@ -247,7 +259,7 @@ export function VaultShell() {
               <button
                 type="button"
                 aria-label={`Delete folder ${folder.name}`}
-                onClick={() => void handleDeleteFolder(folder.id)}
+                onClick={() => setFolderToDelete(folder)}
                 className="absolute right-1.5 top-1/2 hidden -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-destructive group-hover:block"
               >
                 <Trash2 className="size-3.5" />
@@ -276,8 +288,11 @@ export function VaultShell() {
                 <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                   <Settings /> Account &amp; security…
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.open("/install", "_blank")}>
+                  <Puzzle /> Get the browser extension…
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setImportOpen(true)}>
-                  <Upload /> Import from NordPass…
+                  <Upload /> Import passwords…
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportJson(items, folders)}>
                   <Download /> Export JSON
@@ -315,6 +330,29 @@ export function VaultShell() {
       />
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      <Dialog open={folderToDelete !== null} onOpenChange={(open) => !open && setFolderToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete folder “{folderToDelete?.name}”?</DialogTitle>
+            <DialogDescription>
+              The folder is removed, but the logins inside it stay in your vault (they just lose
+              their folder).
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setFolderToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => folderToDelete && void handleDeleteFolder(folderToDelete.id)}
+            >
+              Delete folder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

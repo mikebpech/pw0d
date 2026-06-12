@@ -39,6 +39,8 @@ export type BgRequest =
   | { type: "getItem"; id: string }
   | { type: "credentialsForUrl"; url: string }
   | { type: "menuState"; url: string }
+  | { type: "siteStatus"; url: string }
+  | { type: "setSiteDisabled"; url: string; disabled: boolean }
   | { type: "fillIntoActiveTab"; id: string }
   | { type: "generate"; options?: Partial<PasswordOptions> }
   | { type: "loginSubmitted"; url: string; username: string; password: string }
@@ -65,7 +67,9 @@ export type BgResponse = {
   search: { items: ItemSummary[] };
   getItem: { data: ItemData | null };
   credentialsForUrl: { matches: CredentialMatch[] };
-  menuState: { status: VaultStatus; matches: CredentialMatch[]; suggestions: string[] };
+  menuState: { status: VaultStatus; matches: CredentialMatch[]; suggestions: string[]; disabled: boolean };
+  siteStatus: { status: VaultStatus; disabled: boolean };
+  setSiteDisabled: { ok: boolean };
   fillIntoActiveTab: { ok: boolean };
   generate: { password: string };
   loginSubmitted: { ok: true };

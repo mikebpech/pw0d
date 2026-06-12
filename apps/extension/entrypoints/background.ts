@@ -166,10 +166,24 @@ export default defineBackground(() => {
       case "credentialsForUrl":
         return credentialsForUrl(message.url).then((matches) => ({ matches }));
 
+      case "siteStatus":
+        return (async () => {
+          const { status } = await session.getStatus();
+          return { status, disabled: await session.isSiteDisabled(message.url) };
+        })();
+
+      case "setSiteDisabled":
+        return session
+          .setSiteDisabled(message.url, message.disabled)
+          .then(() => ({ ok: true as const }));
+
       case "menuState":
         return (async () => {
           const { status } = await session.getStatus();
-          if (status !== "unlocked") return { status, matches: [], suggestions: [] };
+          const disabled = await session.isSiteDisabled(message.url);
+          if (status !== "unlocked" || disabled) {
+            return { status, matches: [], suggestions: [], disabled };
+          }
           const matches = await credentialsForUrl(message.url);
           // Signup prefill: the user's most-used email-style usernames.
           const counts = new Map<string, number>();
@@ -181,7 +195,7 @@ export default defineBackground(() => {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 3)
             .map(([username]) => username);
-          return { status, matches, suggestions };
+          return { status, matches, suggestions, disabled: false };
         })();
 
       case "fillIntoActiveTab":
