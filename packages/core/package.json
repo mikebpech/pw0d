@@ -1,0 +1,19 @@
+{
+  "name": "@pw0d/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pw0d/crypto": "workspace:*",
+    "@zxcvbn-ts/core": "^3.0.4",
+    "@zxcvbn-ts/language-common": "^3.0.4",
+    "zod": "^3.24.0"
+  },
+  "sideEffects": false
+}

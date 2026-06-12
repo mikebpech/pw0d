@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head><title>Shadow DOM fixture (Reddit-style)</title></head>
+  <body style="font-family: sans-serif; padding: 40px;">
+    <h1>Web-component sign in</h1>
+    <div id="host"></div>
+    <script>
+      const root = document.getElementById("host").attachShadow({ mode: "open" });
+      root.innerHTML = `
+        <form>
+          <p><label>Email <input type="email" id="s-email" style="width:220px" /></label></p>
+          <p><label>Password <input type="password" id="s-password" style="width:220px" /></label></p>
+          <p><button type="submit">Sign in</button></p>
+        </form>`;
+    </script>
+  </body>
+</html>

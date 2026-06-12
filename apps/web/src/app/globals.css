@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans-base);
+  --font-mono: var(--font-mono-base);
+  --font-heading: var(--font-sans-base);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * pw0d "instrument panel" theme — dark graphite, hairline borders, a single
+ * luminous chartreuse reserved for security moments (unlock, focus, primary).
+ * The app is dark-only by design.
+ */
+:root,
+.dark {
+  --background: oklch(0.21 0.006 261);
+  --foreground: oklch(0.95 0.005 95);
+  --card: oklch(0.24 0.007 261);
+  --card-foreground: oklch(0.95 0.005 95);
+  --popover: oklch(0.26 0.007 261);
+  --popover-foreground: oklch(0.95 0.005 95);
+  --primary: oklch(0.875 0.215 127);
+  --primary-foreground: oklch(0.2 0.04 127);
+  --secondary: oklch(0.3 0.008 261);
+  --secondary-foreground: oklch(0.95 0.005 95);
+  --muted: oklch(0.28 0.007 261);
+  --muted-foreground: oklch(0.74 0.008 261);
+  --accent: oklch(0.31 0.008 261);
+  --accent-foreground: oklch(0.97 0.005 95);
+  --destructive: oklch(0.66 0.19 25);
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 19%);
+  --ring: oklch(0.875 0.215 127 / 60%);
+  --chart-1: oklch(0.875 0.215 127);
+  --chart-2: oklch(0.7 0.12 200);
+  --chart-3: oklch(0.75 0.14 80);
+  --chart-4: oklch(0.63 0.19 25);
+  --chart-5: oklch(0.62 0.01 261);
+  --sidebar: oklch(0.19 0.006 261);
+  --sidebar-foreground: oklch(0.95 0.005 95);
+  --sidebar-primary: oklch(0.875 0.215 127);
+  --sidebar-primary-foreground: oklch(0.2 0.04 127);
+  --sidebar-accent: oklch(0.29 0.007 261);
+  --sidebar-accent-foreground: oklch(0.97 0.005 95);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.875 0.215 127 / 60%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* Scale the whole UI up — everything is rem-based, so this is the one lever. */
+  html {
+    font-size: 17px;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv05";
+  }
+  /* Tailwind v4 preflight sets cursor:default on buttons — undo that for
+     everything interactive. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="menuitem"],
+  [role="option"],
+  [role="tab"],
+  [role="switch"],
+  [role="checkbox"],
+  a,
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+  ::selection {
+    background: oklch(0.875 0.215 127 / 28%);
+  }
+  /* Thin, quiet scrollbars to match the instrument feel */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(1 0 0 / 14%) transparent;
+  }
+}
+
+@layer utilities {
+  /* Staggered entrance for vault content after unlock */
+  .reveal {
+    animation: reveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .reveal-1 { animation-delay: 0.04s; }
+  .reveal-2 { animation-delay: 0.1s; }
+  .reveal-3 { animation-delay: 0.16s; }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Chartreuse pulse on the unlock keyhole */
+  .keyglow {
+    box-shadow: 0 0 0 1px oklch(0.875 0.215 127 / 35%), 0 0 28px oklch(0.875 0.215 127 / 14%);
+  }
+
+  /* Faint top-edge gradient line, instrument-panel style */
+  .panel-edge {
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      oklch(1 0 0 / 10%) 30%,
+      oklch(1 0 0 / 10%) 70%,
+      transparent
+    );
+    height: 1px;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}

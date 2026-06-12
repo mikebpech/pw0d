@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Same instrument-panel palette as the web vault. */
+@theme {
+  --color-background: oklch(0.21 0.006 261);
+  --color-foreground: oklch(0.95 0.005 95);
+  --color-card: oklch(0.24 0.007 261);
+  --color-muted: oklch(0.28 0.007 261);
+  --color-muted-foreground: oklch(0.74 0.008 261);
+  --color-primary: oklch(0.875 0.215 127);
+  --color-primary-foreground: oklch(0.2 0.04 127);
+  --color-destructive: oklch(0.66 0.19 25);
+  --color-border: oklch(1 0 0 / 14%);
+  --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, monospace;
+}
+
+body {
+  width: 360px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+button { cursor: pointer; }
+
+input, textarea {
+  background: oklch(1 0 0 / 7%);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-foreground);
+  outline: none;
+}
+input:focus { border-color: oklch(0.875 0.215 127 / 60%); }
+::placeholder { color: oklch(0.6 0.008 261); }

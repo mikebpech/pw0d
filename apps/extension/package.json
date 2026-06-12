@@ -1,0 +1,31 @@
+{
+  "name": "@pw0d/extension",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@pw0d/api-client": "workspace:*",
+    "@pw0d/core": "workspace:*",
+    "@pw0d/crypto": "workspace:*",
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tldts": "^7.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@wxt-dev/module-react": "^1.1.3",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.8.0",
+    "wxt": "^0.20.0"
+  }
+}

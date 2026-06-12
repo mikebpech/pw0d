@@ -1,0 +1,16 @@
+{
+  "name": "@pw0d/crypto",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hash-wasm": "^4.12.0"
+  },
+  "sideEffects": false
+}

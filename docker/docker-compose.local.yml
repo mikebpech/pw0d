@@ -1,0 +1,31 @@
+# Local / LAN deployment — no public domain, no ACME. Serves plain HTTP on
+# port 8080 of this machine. Use this to run pw0d 24/7 on your Mac/home server
+# and reach it from other devices via a private network (Tailscale recommended:
+# `tailscale serve` adds HTTPS on top, which the extension/app require off-LAN).
+#
+#   docker compose -f docker-compose.local.yml up -d
+#   → http://localhost:8080  (and http://<this-machine-ip>:8080 on your LAN)
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: pw0d/server:latest
+    restart: unless-stopped
+    environment:
+      - DATA_DIR=/data
+      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-true}
+    volumes:
+      - pw0d-data:/data
+    ports:
+      - "8080:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  pw0d-data:

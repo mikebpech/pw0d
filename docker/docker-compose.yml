@@ -1,0 +1,51 @@
+# pw0d — production self-host: app + Caddy with automatic HTTPS.
+#
+#   1. point a DNS A record (e.g. vault.example.com) at this box
+#   2. PW0D_DOMAIN=vault.example.com docker compose up -d
+#   3. open https://vault.example.com, sign up
+#   4. lock it down once your account exists:
+#        SIGNUPS_ALLOWED=false PW0D_DOMAIN=vault.example.com docker compose up -d
+#
+# Persistence: the `pw0d-data` volume holds the SQLite DB + auto-generated JWT
+# secret; `caddy-data` holds the TLS certs. Back up `pw0d-data` and you're safe.
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: pw0d/server:latest
+    restart: unless-stopped
+    environment:
+      - DATA_DIR=/data
+      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED:-true}
+    volumes:
+      - pw0d-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - PW0D_DOMAIN=${PW0D_DOMAIN:?set PW0D_DOMAIN, e.g. vault.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  pw0d-data:
+  caddy-data:
+  caddy-config:

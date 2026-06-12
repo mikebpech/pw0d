@@ -1,0 +1,18 @@
+{
+  "name": "@pw0d/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pw0d/core": "workspace:*",
+    "@pw0d/crypto": "workspace:*",
+    "zod": "^3.24.0"
+  },
+  "sideEffects": false
+}

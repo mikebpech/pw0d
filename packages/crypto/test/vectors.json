@@ -1,0 +1,11 @@
+{
+  "masterKeyDefault": "ufHSYxu6zr+4wzEZ7cFbsqJee7vfQOsDHZtRX3AB2Ow=",
+  "masterKeyLight": "o++3y1+iDKncGoEJfOfZKEPbR4xxly7M8p/TaTerZpA=",
+  "encKey": "A+M5DCpt5ap7RZ/ZRYrkj36KeVFdv5uHfmPpYBO88hE=",
+  "authKey": "7gw1OCI57mq2bc2JEhrMWkOsATEE0RbqaeNj2Y2s1og=",
+  "loginHash": "n/fDr+ES+RX8syZBt7YaZOIwBJ6M1CN5k7nI1bg1F1w=",
+  "recoveryEncKey": "gnfqqDlDwY/GEwbRCkLTcrhNqO2Y/METLOvyhi/EiXM=",
+  "recoveryAuthKey": "6EpzAyMYUrfm75vjdZOf5ISPYCc++rea4C7s5MDt5cY=",
+  "envelope": "v1.bI1jZdS4o750sy/L.vJOWpGBBp+xXY/AZ4dD/sf40aJvWvA0+7pzt/cyGTpyITxxhfzj5pZw=",
+  "wrappedKey": "v1.pCvOc14hruQzE3YN.JaBLSzDxST2BNj26+4ySTWeXZjJLvyUhg9E8CRTV3247j4a6T+nQLlNAqYYfwYhZ"
+}
