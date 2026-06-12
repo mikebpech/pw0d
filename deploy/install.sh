@@ -3,26 +3,52 @@
 # pw0d one-command installer. Run on a fresh Ubuntu server (as root), from the
 # pw0d project folder:
 #
-#     bash deploy/install.sh vault.yourdomain.com
+#     bash deploy/install.sh
 #
-# It installs Docker, opens the firewall, and launches pw0d with automatic HTTPS.
+# With no arguments it auto-detects this server's public IP and gives you a free
+# HTTPS URL via sslip.io — no domain required. To use your own domain instead:
+#
+#     bash deploy/install.sh vault.example.com
+#
 set -euo pipefail
 
 DOMAIN="${1:-}"
-if [ -z "$DOMAIN" ]; then
-  echo "Usage: bash deploy/install.sh <your-domain>"
-  echo "   e.g. bash deploy/install.sh vault.example.com"
-  exit 1
+TLS_MODE="auto"   # "auto" = Let's Encrypt; "internal" = self-signed
+
+if [ "$DOMAIN" = "--self-signed" ]; then
+  TLS_MODE="internal"
+  DOMAIN=""
 fi
 
 if [ ! -f docker/docker-compose.yml ]; then
   echo "✗ Run this from the pw0d project root (the folder that contains docker/)."
   exit 1
 fi
-
 if [ "$(id -u)" -ne 0 ]; then
-  echo "✗ Please run as root (e.g. 'sudo bash deploy/install.sh $DOMAIN')."
+  echo "✗ Please run as root (e.g. 'sudo bash deploy/install.sh')."
   exit 1
+fi
+
+if [ "$TLS_MODE" = "internal" ]; then
+  echo "==> Self-signed mode: detecting public IP..."
+  IP="$(curl -fsSL https://api.ipify.org || curl -fsSL https://ifconfig.me || true)"
+  [ -z "$IP" ] && { echo "✗ Couldn't detect the public IP."; exit 1; }
+  DOMAIN="$IP"
+  echo "    Serving https://$IP with a self-signed certificate."
+  echo "    (Browsers will warn once; the extension needs this cert trusted manually.)"
+elif [ -z "$DOMAIN" ]; then
+  echo "==> Detecting this server's public IP..."
+  IP="$(curl -fsSL https://api.ipify.org || curl -fsSL https://ifconfig.me || true)"
+  if [ -z "$IP" ]; then
+    echo "✗ Couldn't detect the public IP. Pass a domain or IP-based host instead:"
+    echo "    bash deploy/install.sh 203-0-113-42.sslip.io"
+    exit 1
+  fi
+  # sslip.io maps <dashed-ip>.sslip.io → that IP, and is on the Public Suffix
+  # List, so Caddy gets a real Let's Encrypt cert for it. Free HTTPS, no domain.
+  DOMAIN="${IP//./-}.sslip.io"
+  echo "    Public IP: $IP"
+  echo "    Your pw0d URL will be: https://$DOMAIN  (free HTTPS, no domain needed)"
 fi
 
 echo "==> [1/4] Installing Docker (if needed)..."
@@ -71,6 +97,7 @@ cat <<EOF
       cd $(pwd)
       SIGNUPS_ALLOWED=false PW0D_DOMAIN=$DOMAIN docker compose up -d
 
-  Point your browser extension and phone at: https://$DOMAIN
+  Point your browser extension (and phone, later) at:
+      https://$DOMAIN
 ────────────────────────────────────────────────────────────
 EOF

@@ -1,11 +1,14 @@
 # Run pw0d on a VPS — the simple guide
 
-Goal: a permanent `https://vault.yourdomain.com` that your browser extension and
-phone point at. Total time ~15 minutes, cost ~$5/month. Everything you type is
-copy-paste.
+Goal: a permanent HTTPS URL that your browser extension and phone point at. Total
+time ~15 minutes, cost ~$4–6/month. Everything you type is copy-paste.
 
-You need: a domain name (any registrar — Namecheap, Cloudflare, Porkbun, etc.)
-and a credit card for the VPS.
+You need: a credit card for the VPS, and (optionally) a domain name. **You don't
+need a domain** — Step 2 covers a free hostname via sslip.io. But why HTTPS at
+all? Browsers only run the vault's encryption code on secure (HTTPS) origins, and
+the extension requires it — and HTTPS needs a hostname, because certificate
+authorities don't issue free certs for bare IP addresses. Step 2 gives you three
+ways to get that hostname.
 
 ---
 
@@ -29,21 +32,48 @@ Either provider works. Hetzner is cheapest.
 
 ---
 
-## Step 2 — Point your domain at the server
+## Step 2 — Get a hostname for HTTPS (pick one)
 
-In your domain registrar's DNS settings, add **one record**:
+### Option A — Your own domain (recommended)
 
-| Type | Name | Value |
-|------|------|-------|
-| `A` | `vault` (or `@` for the root domain) | your server's IPv4, e.g. `203.0.113.42` |
+Buy a domain (~$1–12/yr at Porkbun, Cloudflare, Namecheap…), then in your
+registrar's **DNS settings**, add **one record**:
 
-This makes `vault.yourdomain.com` resolve to your server. DNS can take a few
-minutes (sometimes up to an hour) to propagate. You can check from your Mac:
+| Type | Name / Host | Value / Points to | TTL |
+|------|-------------|-------------------|-----|
+| `A` | `vault` | your server's IPv4, e.g. `203.0.113.42` | default / auto |
 
+- The **Type** is `A` (maps a name to an IPv4 address).
+- The **Name/Host** is the subdomain — `vault` gives you `vault.yourdomain.com`.
+  Use `@` (or leave blank) to use the root domain itself.
+- The **Value** is the IPv4 you copied in Step 1. (No `http://`, no port — just
+  the number.)
+- Leave TTL at the default. Save.
+
+DNS can take a few minutes (occasionally up to an hour) to take effect. Check it
+from your computer:
 ```bash
-dig +short vault.yourdomain.com
-# should print your server's IP
+dig +short vault.yourdomain.com    # should print your server's IP
 ```
+You'll pass `vault.yourdomain.com` to the installer in Step 4.
+
+> Registrar-specific note: some registrars (Cloudflare especially) have a
+> "proxy"/orange-cloud toggle on the record — turn it **off** (grey cloud /
+> "DNS only") so Caddy can get its own certificate directly.
+
+### Option B — Free hostname via sslip.io (no domain)
+
+Skip DNS entirely. `203-0-113-42.sslip.io` automatically resolves to
+`203.0.113.42` — a free public DNS service that only does lookups and never sees
+your traffic. The installer detects your IP and uses it for you (Step 4, the
+no-argument form). Trade-off: uglier URL, and you rely on sslip.io's DNS.
+
+### Option C — Self-signed on the bare IP (advanced)
+
+No hostname at all — `https://<your-ip>` with a self-signed certificate. The web
+vault works after a one-time browser warning, but the extension needs the cert
+manually trusted on each device. Use `bash deploy/install.sh --self-signed` in
+Step 4. Only pick this if you want zero external hostnames.
 
 ---
 
@@ -119,12 +149,17 @@ cd /root/pw0d
 ```
 
 ### Run the installer (either option above lands you in the pw0d folder)
+
+Match this to your Step 2 choice:
 ```bash
-bash deploy/install.sh vault.yourdomain.com
+bash deploy/install.sh vault.yourdomain.com   # Option A — your domain
+bash deploy/install.sh                         # Option B — free sslip.io URL
+bash deploy/install.sh --self-signed           # Option C — self-signed on the IP
 ```
 
 That's it. The script installs Docker, opens the server firewall, builds the
-image, and starts pw0d with automatic HTTPS. First build takes a few minutes.
+image, and starts pw0d with automatic HTTPS. First build takes a few minutes,
+then it prints your URL.
 
 > **Note for 1 GB droplets**: the Next.js build can run out of memory. Either use
 > a 2 GB+ size, or temporarily add swap before installing:
