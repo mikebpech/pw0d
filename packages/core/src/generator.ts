@@ -67,7 +67,7 @@ export interface PassphraseOptions {
 
 export const DEFAULT_PASSPHRASE_OPTIONS: PassphraseOptions = {
   words: 5,
-  separator: "-",
+  separator: " ",
   capitalize: false,
   includeNumber: false,
 };

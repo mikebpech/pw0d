@@ -29,6 +29,8 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="item/[id]" options={{ title: "", headerBackTitle: "Vault" }} />
+        <Stack.Screen name="item/new" options={{ title: "New item", presentation: "modal" }} />
+        <Stack.Screen name="item/[id]/edit" options={{ title: "Edit item", presentation: "modal" }} />
         <Stack.Screen name="generator" options={{ title: "Generator", presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />
       </Stack>

@@ -30,10 +30,13 @@ import {
   type PersistedSession,
   clearAccountKey,
   clearSession,
+  clearVaultCache,
   loadAccountKey,
   loadSession,
+  loadVaultCache,
   saveAccountKey,
   saveSession,
+  saveVaultCache,
 } from "./storage";
 
 export interface VaultItem {
@@ -158,6 +161,22 @@ function autofillCredentials(items: VaultItem[]): AutofillCredential[] {
   return credentials;
 }
 
+async function persistVaultCache(accountKey: Uint8Array, items: VaultItem[], folders: VaultFolder[], revision: number): Promise<void> {
+  try {
+    await saveVaultCache({ items, folders, revision }, accountKey);
+  } catch (error) {
+    console.warn("pw0d: failed to save encrypted vault cache", error);
+  }
+}
+
+async function hydrateFromCache(accountKey: Uint8Array, set: (state: Partial<VaultState>) => void): Promise<boolean> {
+  const cached = await loadVaultCache(accountKey);
+  if (!cached) return false;
+  set({ items: cached.items, folders: cached.folders, revision: cached.revision });
+  await syncAutofillCache(autofillCredentials(cached.items));
+  return true;
+}
+
 export const useVault = create<VaultState>((set, get) => ({
   status: "loading",
   serverUrl: null,
@@ -220,7 +239,13 @@ export const useVault = create<VaultState>((set, get) => ({
     if (!accountKey) throw new CryptoError("biometric unlock unavailable — use your master password");
     api(session);
     set({ status: "unlocked", serverUrl: session.serverUrl, email: session.email, accountKey });
-    await get().syncNow();
+    const hadCache = await hydrateFromCache(accountKey, set);
+    try {
+      await get().syncNow();
+    } catch (error) {
+      if (!hadCache) throw error;
+      console.warn("pw0d: sync failed, using encrypted offline cache", error);
+    }
   },
 
   unlockWithPassword: async (masterPassword) => {
@@ -236,7 +261,13 @@ export const useVault = create<VaultState>((set, get) => ({
     await saveAccountKey(accountKey);
     api(session);
     set({ status: "unlocked", serverUrl: session.serverUrl, email: session.email, accountKey });
-    await get().syncNow();
+    const hadCache = await hydrateFromCache(accountKey, set);
+    try {
+      await get().syncNow();
+    } catch (error) {
+      if (!hadCache) throw error;
+      console.warn("pw0d: sync failed, using encrypted offline cache", error);
+    }
   },
 
   lock: () => {
@@ -251,6 +282,7 @@ export const useVault = create<VaultState>((set, get) => ({
     }
     await clearSession();
     await clearAccountKey();
+    await clearVaultCache();
     await clearAutofillCache();
     resetApi();
     set({ status: "logged-out", email: null, serverUrl: null, accountKey: null, items: [], folders: [], revision: 0 });
@@ -263,6 +295,7 @@ export const useVault = create<VaultState>((set, get) => ({
       const sync = await api().sync();
       const { items, folders } = await decryptVault(accountKey, sync);
       set({ items, folders, revision: sync.revision });
+      await persistVaultCache(accountKey, items, folders, sync.revision);
       await syncAutofillCache(autofillCredentials(items));
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -290,6 +323,7 @@ export const useVault = create<VaultState>((set, get) => ({
         (a, b) => a.data.name.localeCompare(b.data.name),
       ),
     }));
+    await persistVaultCache(accountKey, get().items, get().folders, revision);
     await syncAutofillCache(autofillCredentials(get().items));
     return id;
   },
@@ -311,6 +345,7 @@ export const useVault = create<VaultState>((set, get) => ({
           )
           .sort((a, b) => a.data.name.localeCompare(b.data.name)),
       }));
+      await persistVaultCache(accountKey, get().items, get().folders, revision);
       await syncAutofillCache(autofillCredentials(get().items));
     } catch (error) {
       if (error instanceof ApiError && error.code === "stale_write") {
@@ -322,8 +357,11 @@ export const useVault = create<VaultState>((set, get) => ({
   },
 
   deleteItem: async (id) => {
+    const { accountKey } = get();
+    if (!accountKey) throw new CryptoError("vault is locked");
     const { revision } = await api().deleteItem(id);
     set((state) => ({ revision, items: state.items.filter((item) => item.id !== id) }));
+    await persistVaultCache(accountKey, get().items, get().folders, revision);
     await syncAutofillCache(autofillCredentials(get().items));
   },
 }));

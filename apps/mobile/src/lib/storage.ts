@@ -13,12 +13,14 @@
  */
 
 import * as SecureStore from "expo-secure-store";
-import type { KdfParams } from "@pw0d/crypto";
 import type { Tokens } from "@pw0d/api-client";
-import { fromBase64, toBase64 } from "@pw0d/crypto";
+import type { ItemData, ItemType } from "@pw0d/core";
+import type { KdfParams } from "@pw0d/crypto";
+import { decryptString, encryptString, fromBase64, toBase64 } from "@pw0d/crypto";
 
 const SESSION_KEY = "pw0d.session";
 const ACCOUNT_KEY = "pw0d.accountKey";
+const VAULT_CACHE_KEY = "pw0d.vaultCache";
 
 export interface PersistedSession {
   serverUrl: string;
@@ -26,6 +28,28 @@ export interface PersistedSession {
   kdfParams: KdfParams;
   protectedAccountKey: string;
   tokens: Tokens | null;
+}
+
+export interface CachedVaultItem {
+  id: string;
+  type: ItemType;
+  folderId: string | null;
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+  data: ItemData;
+}
+
+export interface CachedVaultFolder {
+  id: string;
+  name: string;
+}
+
+export interface CachedVault {
+  items: CachedVaultItem[];
+  folders: CachedVaultFolder[];
+  revision: number;
+  cachedAt: string;
 }
 
 export async function loadSession(): Promise<PersistedSession | null> {
@@ -46,6 +70,32 @@ export async function saveSession(session: PersistedSession): Promise<void> {
 
 export async function clearSession(): Promise<void> {
   await SecureStore.deleteItemAsync(SESSION_KEY);
+}
+
+export async function loadVaultCache(accountKey: Uint8Array): Promise<CachedVault | null> {
+  const encrypted = await SecureStore.getItemAsync(VAULT_CACHE_KEY);
+  if (!encrypted) return null;
+  try {
+    return JSON.parse(await decryptString(encrypted, accountKey, "mobile:vault-cache")) as CachedVault;
+  } catch {
+    await SecureStore.deleteItemAsync(VAULT_CACHE_KEY);
+    return null;
+  }
+}
+
+export async function saveVaultCache(cache: Omit<CachedVault, "cachedAt">, accountKey: Uint8Array): Promise<void> {
+  const encrypted = await encryptString(
+    JSON.stringify({ ...cache, cachedAt: new Date().toISOString() } satisfies CachedVault),
+    accountKey,
+    "mobile:vault-cache",
+  );
+  await SecureStore.setItemAsync(VAULT_CACHE_KEY, encrypted, {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
+}
+
+export async function clearVaultCache(): Promise<void> {
+  await SecureStore.deleteItemAsync(VAULT_CACHE_KEY);
 }
 
 /**

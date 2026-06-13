@@ -47,10 +47,12 @@ export default function Index() {
           <Text style={{ flex: 1, color: colors.foreground, fontSize: 20, fontWeight: "800" }}>
             pw<Text style={{ color: colors.primary }}>0</Text>d
           </Text>
-          <HeaderButton label="Generate" onPress={() => router.push("/generator")} />
-          <HeaderButton label="Settings" onPress={() => router.push("/settings")} />
+          <HeaderButton label="+" accessibilityLabel="New item" onPress={() => router.push("/item/new")} />
+          <HeaderButton label="Gen" accessibilityLabel="Generator" onPress={() => router.push("/generator")} />
+          <HeaderButton label="⚙" accessibilityLabel="Settings" onPress={() => router.push("/settings")} />
           <HeaderButton
             label="Lock"
+            accessibilityLabel="Lock vault"
             onPress={() => {
               haptic();
               lock();
@@ -63,9 +65,9 @@ export default function Index() {
   );
 }
 
-function HeaderButton({ label, onPress }: { label: string; onPress: () => void }) {
+function HeaderButton({ label, accessibilityLabel, onPress }: { label: string; accessibilityLabel?: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} hitSlop={8} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} onPress={onPress} hitSlop={8} style={{ minWidth: 36, minHeight: 36, alignItems: "center", justifyContent: "center" }}>
       <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "700" }}>{label}</Text>
     </Pressable>
   );

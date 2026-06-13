@@ -21,7 +21,7 @@ import { colors, radius } from "@/lib/theme";
 type Mode = "password" | "passphrase";
 
 export function GeneratorPanel({ onUse, onCopied }: { onUse?: (value: string) => void; onCopied?: () => void }) {
-  const [mode, setMode] = useState<Mode>("password");
+  const [mode, setMode] = useState<Mode>("passphrase");
   const [length, setLength] = useState(DEFAULT_PASSWORD_OPTIONS.length);
   const [uppercase, setUppercase] = useState(true);
   const [digits, setDigits] = useState(true);
@@ -51,7 +51,7 @@ export function GeneratorPanel({ onUse, onCopied }: { onUse?: (value: string) =>
     <View style={{ gap: 16 }}>
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Chip label="characters" active={mode === "password"} onPress={() => setMode("password")} />
-        <Chip label="words" active={mode === "passphrase"} onPress={() => setMode("passphrase")} />
+        <Chip label="sentence" active={mode === "passphrase"} onPress={() => setMode("passphrase")} />
       </View>
 
       <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: radius.lg, borderCurve: "continuous", padding: 14 }}>

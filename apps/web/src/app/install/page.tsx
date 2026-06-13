@@ -2,7 +2,7 @@
 
 import { Check, Copy, Download, Puzzle } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 
@@ -30,7 +30,7 @@ const STEPS = [
     body: (
       <>
         Download the extension, then unzip it (double-click on macOS, or right-click
-        → Extract on Windows). You'll get a <code className="font-mono text-xs">pw0d</code> folder
+        → Extract on Windows). You&apos;ll get a <code className="font-mono text-xs">pw0d</code> folder
         — remember where it is.
       </>
     ),
@@ -57,8 +57,11 @@ const STEPS = [
 ];
 
 export default function InstallPage() {
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
+  const origin = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => "",
+  );
 
   return (
     <div className="relative flex min-h-screen flex-col items-center px-4 py-16">
@@ -108,7 +111,7 @@ export default function InstallPage() {
         </ol>
 
         <div className="mt-10 rounded-md border border-border bg-card px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-          Loading an unpacked extension is normal for self-hosted tools — Chrome just doesn't
+          Loading an unpacked extension is normal for self-hosted tools — Chrome just doesn&apos;t
           one-click-install anything outside its Web Store. The extension only talks to{" "}
           <span className="text-foreground">your</span> server.
         </div>

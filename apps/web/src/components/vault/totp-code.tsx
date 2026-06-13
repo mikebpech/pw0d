@@ -15,7 +15,7 @@ export function useTotp(stored: string | undefined): TotpState | null {
   const [state, setState] = useState<TotpState | null>(null);
   useEffect(() => {
     if (!stored) {
-      setState(null);
+      queueMicrotask(() => setState(null));
       return;
     }
     let active = true;

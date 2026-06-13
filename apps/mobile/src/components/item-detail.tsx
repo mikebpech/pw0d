@@ -6,8 +6,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
+import { router } from "expo-router";
 import { TotpRow } from "@/components/totp-row";
-import { ItemAvatar, SecretRow, ValueRow } from "@/components/ui";
+import { Button, ItemAvatar, SecretRow, ValueRow } from "@/components/ui";
 import { useVault } from "@/lib/store";
 import { colors, radius } from "@/lib/theme";
 
@@ -85,6 +86,7 @@ export function ItemDetail({ id }: { id: string }) {
               {folderName ? <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{folderName}</Text> : null}
             </View>
           </View>
+          <Button label="Edit" variant="secondary" onPress={() => router.push(`/item/${item.id}/edit`)} style={{ minHeight: 40, paddingHorizontal: 12 }} />
         </View>
 
         {rows}

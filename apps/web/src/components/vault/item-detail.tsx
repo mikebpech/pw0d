@@ -89,9 +89,11 @@ export function ItemDetail({
   const editType: ItemType = creating ?? item?.type ?? "login";
 
   useEffect(() => {
-    setRevealed(false);
-    setEditing(false);
-    if (creating) setDraft(EMPTY_DRAFT);
+    queueMicrotask(() => {
+      setRevealed(false);
+      setEditing(false);
+      if (creating) setDraft(EMPTY_DRAFT);
+    });
   }, [creating]);
 
   function beginEdit() {
@@ -223,7 +225,7 @@ export function ItemDetail({
                   <div className="flex gap-1.5">
                     <Input
                       type={revealed ? "text" : "password"}
-                      className="font-mono"
+                      className="min-w-0 font-mono"
                       value={draft.password}
                       onChange={(event) => setDraft({ ...draft, password: event.target.value })}
                     />
@@ -244,7 +246,7 @@ export function ItemDetail({
                           </Button>
                         }
                       />
-                      <PopoverContent align="end" className="w-80 p-0">
+                      <PopoverContent align="end" className="w-[calc(100vw-2rem)] p-0 sm:w-80">
                         <GeneratorPanel
                           onUse={(value) => {
                             setDraft((current) => ({ ...current, password: value }));
@@ -325,7 +327,7 @@ export function ItemDetail({
                   <div className="flex gap-1.5">
                     <Input
                       type={revealed ? "text" : "password"}
-                      className="font-mono"
+                      className="min-w-0 font-mono"
                       value={draft.passphrase}
                       onChange={(event) => setDraft({ ...draft, passphrase: event.target.value })}
                     />
@@ -426,7 +428,7 @@ export function ItemDetail({
               )}
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex shrink-0 gap-1">
             <Button variant="secondary" size="icon" onClick={beginEdit} aria-label="Edit">
               <Pencil />
             </Button>
@@ -539,7 +541,7 @@ function ValueRow({
 }) {
   if (!value) return null;
   return (
-    <div className="group flex items-center gap-3 px-3 py-3 sm:px-4">
+    <div className="group flex items-start gap-3 px-3 py-3 sm:items-center sm:px-4">
       <div className="min-w-0 flex-1">
         <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground/60">
           {label}
@@ -565,7 +567,7 @@ function ValueRow({
           </div>
         )}
       </div>
-      <div className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+      <div className="shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <CopyButton value={value} label={copyLabel} />
       </div>
     </div>
@@ -588,8 +590,8 @@ function SecretRow({
   if (!value) return null;
   const strength = showStrength ? scorePassword(value) : null;
   return (
-    <div className="group flex items-start gap-3 px-3 py-3 sm:px-4">
-      <div className="min-w-0 flex-1">
+    <div className="group flex flex-wrap items-start gap-3 px-3 py-3 sm:flex-nowrap sm:px-4">
+      <div className="min-w-0 flex-1 basis-full sm:basis-auto">
         <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground/60">
           {label}
         </div>
@@ -613,7 +615,7 @@ function SecretRow({
           {["very weak", "weak", "okay", "good", "strong"][strength.score]}
         </Badge>
       )}
-      <div className="flex opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+      <div className="ml-auto flex shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <Button
           variant="ghost"
           size="icon-sm"

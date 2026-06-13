@@ -45,9 +45,9 @@ describe("generatePassword", () => {
 });
 
 describe("generatePassphrase", () => {
-  it("uses sane defaults (5 words, dash-separated)", () => {
+  it("uses sane defaults (5 words, space-separated)", () => {
     const phrase = generatePassphrase();
-    const words = phrase.split("-");
+    const words = phrase.split(" ");
     expect(words).toHaveLength(5);
     for (const word of words) {
       expect(EFF_WORDLIST).toContain(word);
@@ -59,7 +59,7 @@ describe("generatePassphrase", () => {
     const words = phrase.split(".");
     expect(words).toHaveLength(4);
     for (const word of words) {
-      expect(word).toMatch(/^[A-Z][a-z]+[0-9]?$/);
+      expect(word).toMatch(/^[A-Z][a-z-]+[0-9]?$/);
     }
     expect(phrase).toMatch(/[0-9]/);
   });

@@ -2,7 +2,7 @@ import { recoverySetupRequestSchema } from "@pw0d/api-client";
 import { eq } from "drizzle-orm";
 import { hashServerSecret } from "@/server/auth";
 import { db, tables } from "@/server/db";
-import { apiError, isResponse, json, parseBody, requireAuth } from "@/server/http";
+import { isResponse, json, parseBody, requireAuth } from "@/server/http";
 
 /** Whether recovery is configured. */
 export async function GET(request: Request) {

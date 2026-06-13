@@ -63,7 +63,7 @@ function Row({
       )}
     >
       <ItemIcon name={item.data.name} type={item.type} data={item.data} />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{item.data.name}</div>
         <div className="truncate font-mono text-xs text-muted-foreground">{subtitle(item)}</div>
       </div>
@@ -118,12 +118,12 @@ export function ItemList({
   const selectedId = useVault((state) => state.selectedId);
   const select = useVault((state) => state.select);
   const [grouped, setGrouped] = useState(false);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const view = useMemo(() => (grouped ? groupBySite(items) : null), [grouped, items]);
 
   function toggleGroup(domain: string) {
-    setCollapsed((prev) => {
+    setExpandedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(domain)) next.delete(domain);
       else next.add(domain);
@@ -166,7 +166,7 @@ export function ItemList({
               </Button>
             }
           />
-          <PopoverContent align="end" className="w-80 p-0">
+          <PopoverContent align="end" className="w-[calc(100vw-2rem)] p-0 sm:w-80">
             <GeneratorPanel />
           </PopoverContent>
         </Popover>
@@ -203,7 +203,7 @@ export function ItemList({
         ) : view ? (
           <div className="flex flex-col py-1">
             {view.groups.map((group) => {
-              const expanded = !collapsed.has(group.domain);
+              const expanded = expandedGroups.has(group.domain);
               return (
                 <div key={group.domain}>
                   <GroupHeader group={group} expanded={expanded} onToggle={() => toggleGroup(group.domain)} />

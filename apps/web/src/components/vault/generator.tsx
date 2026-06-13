@@ -8,7 +8,7 @@ import {
   scorePassword,
 } from "@pw0d/core";
 import { Check, Copy, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { StrengthMeter } from "@/components/vault/strength-meter";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type Mode = "password" | "passphrase";
 
 export function GeneratorPanel({ onUse }: { onUse?: (value: string) => void }) {
-  const [mode, setMode] = useState<Mode>("password");
+  const [mode, setMode] = useState<Mode>("passphrase");
   const [length, setLength] = useState(DEFAULT_PASSWORD_OPTIONS.length);
   const [symbols, setSymbols] = useState(true);
   const [digits, setDigits] = useState(true);
@@ -27,21 +27,19 @@ export function GeneratorPanel({ onUse }: { onUse?: (value: string) => void }) {
   const [words, setWords] = useState(DEFAULT_PASSPHRASE_OPTIONS.words);
   const [capitalize, setCapitalize] = useState(false);
   const [includeNumber, setIncludeNumber] = useState(false);
-  const [value, setValue] = useState("");
+  const [nonce, setNonce] = useState(0);
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const regenerate = useCallback(() => {
-    setValue(
-      mode === "password"
+  const value = useMemo(
+    () => {
+      void nonce;
+      return mode === "password"
         ? generatePassword({ length, symbols, digits, uppercase })
-        : generatePassphrase({ words, capitalize, includeNumber }),
-    );
-  }, [mode, length, symbols, digits, uppercase, words, capitalize, includeNumber]);
-
-  useEffect(() => {
-    regenerate();
-  }, [regenerate]);
+        : generatePassphrase({ words, capitalize, includeNumber });
+    },
+    [mode, length, symbols, digits, uppercase, words, capitalize, includeNumber, nonce],
+  );
 
   async function handleCopy() {
     await navigator.clipboard.writeText(value);
@@ -60,7 +58,7 @@ export function GeneratorPanel({ onUse }: { onUse?: (value: string) => void }) {
             characters
           </TabsTrigger>
           <TabsTrigger value="passphrase" className="flex-1">
-            words
+            sentence
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -108,7 +106,7 @@ export function GeneratorPanel({ onUse }: { onUse?: (value: string) => void }) {
       )}
 
       <div className="flex gap-2">
-        <Button variant="secondary" size="sm" onClick={regenerate} className="flex-1">
+        <Button variant="secondary" size="sm" onClick={() => setNonce((current) => current + 1)} className="flex-1">
           <RefreshCw /> Regenerate
         </Button>
         <Button variant="secondary" size="sm" onClick={() => void handleCopy()} className="flex-1">

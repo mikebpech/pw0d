@@ -252,7 +252,7 @@ function RecoveryPanel({ open }: { open: boolean }) {
     setEnabled(await vaultApi().recoveryStatus());
   }
   useEffect(() => {
-    if (open) void load();
+    if (open) queueMicrotask(() => void load());
   }, [open]);
 
   async function generate() {
@@ -299,9 +299,9 @@ function RecoveryPanel({ open }: { open: boolean }) {
           <LifeBuoy className="size-4 text-primary" /> Save your recovery code
         </div>
         <p className="text-xs text-muted-foreground">
-          This is shown <span className="text-foreground">once</span>. It's the only way to regain
-          access if you forget your master password. Store it offline — a password manager you can't
-          get into can't hold it for you.
+          This is shown <span className="text-foreground">once</span>. It&apos;s the only way to regain
+          access if you forget your master password. Store it offline — a password manager you can&apos;t
+          get into can&apos;t hold it for you.
         </p>
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
           <code className="font-mono text-base font-semibold tracking-wider">{code}</code>
@@ -316,7 +316,7 @@ function RecoveryPanel({ open }: { open: boolean }) {
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
-          I've saved my recovery code somewhere safe
+          I&apos;ve saved my recovery code somewhere safe
         </label>
         <Button disabled={!saved} onClick={() => setCode(null)} className="self-start">
           Done
@@ -351,7 +351,7 @@ function RecoveryPanel({ open }: { open: boolean }) {
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
         A recovery code is a one-time secret that can reset your master password without anyone —
-        not even this server's operator — being able to read your vault. Set one up before you trust
+        not even this server&apos;s operator — being able to read your vault. Set one up before you trust
         pw0d with everything.
       </p>
       <Button onClick={() => void generate()} disabled={busy} className="self-start">
@@ -368,7 +368,7 @@ function SessionsPanel({ open }: { open: boolean }) {
     setDevices(await vaultApi().listDevices());
   }
   useEffect(() => {
-    if (open) void load();
+    if (open) queueMicrotask(() => void load());
   }, [open]);
 
   async function revoke(id: string) {
