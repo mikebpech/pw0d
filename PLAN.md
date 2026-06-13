@@ -251,6 +251,22 @@ PW0D_DOMAIN=vault.example.com docker compose up -d
 
 ## 7. Build phases
 
+### Current execution priority
+
+The next work should optimize for becoming a trustworthy daily driver before
+adding broad parity features:
+
+1. **Security + CI hardening**: make the existing zero-knowledge claims
+   continuously verifiable with CI, crypto vectors, auth/session tests,
+   dependency scanning, security headers, rate-limit coverage, and documented
+   backup/restore verification.
+2. **Mobile companion app**: ship Tier 1 mobile next so pw0d is usable away from
+   the desktop: biometric unlock, search, view/copy, generator, TOTP display,
+   and encrypted offline cache reusing the existing TS packages.
+3. **Self-hosting operations polish**: after mobile is underway, make running the
+   server boring with one-command update, backup, restore, health diagnostics,
+   and first-run hardening checks.
+
 **Phase 0 — Foundations (the crypto must be right before anything is built on it)**
 - Monorepo scaffold (pnpm + Turborepo, TS strict, Vitest, Biome/ESLint).
 - `packages/crypto`: KDF, HKDF, key wrapping, envelope encrypt/decrypt.

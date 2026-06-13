@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -16,6 +16,15 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "pw0d",
   description: "Self-hosted, zero-knowledge password manager",
+};
+
+// Phone-friendly: fill the notch/safe-area (the vault uses h-dvh) and match the
+// browser chrome to the dark graphite background.
+export const viewport: Viewport = {
+  themeColor: "#18191c",
+  viewportFit: "cover",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

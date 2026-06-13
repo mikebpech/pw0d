@@ -184,7 +184,10 @@ export function VaultShell() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden lg:grid lg:h-screen lg:grid-cols-[220px_minmax(300px,360px)_1fr]">
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-sidebar px-3 lg:hidden">
+      <header
+        className="flex h-14 shrink-0 items-center gap-2 border-b bg-sidebar px-3 lg:hidden"
+        style={{ paddingTop: "env(safe-area-inset-top)", height: "calc(3.5rem + env(safe-area-inset-top))" }}
+      >
         {showingDetail ? (
           <Button
             variant="ghost"

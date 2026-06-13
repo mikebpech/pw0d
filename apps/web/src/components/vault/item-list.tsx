@@ -232,7 +232,7 @@ export function ItemList({
         )}
       </div>
 
-      <div className="border-t px-3 py-1.5">
+      <div className="border-t px-3 py-1.5" style={{ paddingBottom: "calc(0.375rem + env(safe-area-inset-bottom))" }}>
         <span className="font-mono text-xs text-muted-foreground/60">
           {items.length} item{items.length === 1 ? "" : "s"}
         </span>

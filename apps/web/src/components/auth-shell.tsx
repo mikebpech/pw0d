@@ -26,7 +26,10 @@ export function AuthShell({
         </div>
         {children}
       </div>
-      <p className="absolute bottom-6 font-mono text-xs text-muted-foreground/50">
+      <p
+        className="absolute bottom-6 font-mono text-xs text-muted-foreground/50"
+        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+      >
         zero-knowledge · self-hosted
       </p>
     </div>

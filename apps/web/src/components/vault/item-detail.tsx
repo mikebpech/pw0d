@@ -191,7 +191,10 @@ export function ItemDetail({
   if (mode === "edit") {
     return (
       <section className={cn("flex min-h-0 min-w-0 flex-col overflow-y-auto", className)}>
-        <div className="mx-auto w-full max-w-xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <div
+        className="mx-auto w-full max-w-xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8"
+        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
+      >
           <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-muted-foreground">
             {creating ? `new ${TYPE_LABEL[editType]}` : `edit ${TYPE_LABEL[editType]}`}
           </h2>
@@ -400,7 +403,10 @@ export function ItemDetail({
 
   return (
     <section className={cn("flex min-h-0 min-w-0 flex-col overflow-y-auto", className)}>
-      <div className="mx-auto w-full max-w-xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <div
+        className="mx-auto w-full max-w-xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8"
+        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
+      >
         <div className="mb-6 flex items-start gap-3 sm:mb-8 sm:gap-4">
           <ItemIcon
             name={item.data.name}
