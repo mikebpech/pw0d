@@ -6,6 +6,7 @@ import {
   Folder,
   FolderPlus,
   Globe,
+  ArrowLeft,
   LayoutGrid,
   Lock,
   LogOut,
@@ -55,6 +56,8 @@ const AUTO_LOCK_MS = 10 * 60 * 1000;
 
 export function VaultShell() {
   const { items, folders, email, lock, logout, createFolder, deleteFolder } = useVault();
+  const selectedId = useVault((state) => state.selectedId);
+  const select = useVault((state) => state.select);
   const [filter, setFilter] = useState<VaultFilter>({ kind: "all" });
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState<ItemType | null>(null);
@@ -167,6 +170,8 @@ export function VaultShell() {
       active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
     );
 
+  const showingDetail = Boolean(selectedId || creating);
+
   const counts = useMemo(
     () => ({
       all: items.length,
@@ -178,9 +183,98 @@ export function VaultShell() {
   );
 
   return (
-    <div className="grid h-screen grid-cols-[220px_minmax(300px,360px)_1fr] overflow-hidden">
+    <div className="flex h-dvh flex-col overflow-hidden lg:grid lg:h-screen lg:grid-cols-[220px_minmax(300px,360px)_1fr]">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-sidebar px-3 lg:hidden">
+        {showingDetail ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back to vault list"
+            onClick={() => {
+              setCreating(null);
+              select(null);
+            }}
+          >
+            <ArrowLeft />
+          </Button>
+        ) : (
+          <Brand className="text-lg" />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-mono text-xs text-muted-foreground">{showingDetail ? "item details" : email}</div>
+        </div>
+        <Button variant="ghost" size="icon-sm" onClick={lock} aria-label="Lock vault">
+          <Lock />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" size="icon-sm" aria-label="More">
+                <MoreHorizontal />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <Settings /> Account &amp; security…
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setImportOpen(true)}>
+              <Upload /> Import passwords…
+            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => void logout()}>
+              <LogOut /> Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
+      {!showingDetail && (
+        <nav className="flex shrink-0 gap-1 overflow-x-auto border-b bg-sidebar px-2 py-2 lg:hidden">
+          <button type="button" className={cn(navButton(filter.kind === "all"), "w-auto shrink-0")} onClick={() => setFilter({ kind: "all" })}>
+            <LayoutGrid className="size-4" />
+            All
+            <span className="font-mono text-xs text-muted-foreground/70">{counts.all}</span>
+          </button>
+          <button
+            type="button"
+            className={cn(navButton(filter.kind === "type" && filter.type === "login"), "w-auto shrink-0")}
+            onClick={() => setFilter({ kind: "type", type: "login" })}
+          >
+            <Globe className="size-4" />
+            Logins
+          </button>
+          <button
+            type="button"
+            className={cn(navButton(filter.kind === "type" && filter.type === "ssh"), "w-auto shrink-0")}
+            onClick={() => setFilter({ kind: "type", type: "ssh" })}
+          >
+            <TerminalSquare className="size-4" />
+            SSH
+          </button>
+          <button
+            type="button"
+            className={cn(navButton(filter.kind === "type" && filter.type === "note"), "w-auto shrink-0")}
+            onClick={() => setFilter({ kind: "type", type: "note" })}
+          >
+            <StickyNote className="size-4" />
+            Notes
+          </button>
+          {folders.map((folder) => (
+            <button
+              key={folder.id}
+              type="button"
+              className={cn(navButton(filter.kind === "folder" && filter.folderId === folder.id), "w-auto shrink-0")}
+              onClick={() => setFilter({ kind: "folder", folderId: folder.id })}
+            >
+              <Folder className="size-4" />
+              <span className="max-w-28 truncate">{folder.name}</span>
+            </button>
+          ))}
+        </nav>
+      )}
+
       {/* ---- sidebar ---- */}
-      <aside className="flex min-h-0 flex-col border-r bg-sidebar reveal">
+      <aside className="hidden min-h-0 flex-col border-r bg-sidebar reveal lg:flex">
         <div className="flex h-14 items-center px-4">
           <Brand className="text-lg" />
         </div>
@@ -316,11 +410,15 @@ export function VaultShell() {
         search={search}
         onSearchChange={setSearch}
         onNew={startCreate}
-        className="reveal reveal-1"
+        className={cn("reveal reveal-1 flex-1 lg:flex", showingDetail && "hidden")}
       />
 
       {/* ---- detail ---- */}
-      <ItemDetail creating={creating} onCreatingDone={() => setCreating(null)} className="reveal reveal-2" />
+      <ItemDetail
+        creating={creating}
+        onCreatingDone={() => setCreating(null)}
+        className={cn("reveal reveal-2 flex-1 lg:flex", !showingDetail && "hidden lg:flex")}
+      />
 
       <CommandPalette
         open={paletteOpen}

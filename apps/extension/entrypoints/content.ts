@@ -9,6 +9,17 @@
  */
 
 import { totpCodeFor } from "@pw0d/core";
+import {
+  classifyForm as classifyAutofillForm,
+  iconTargetKeys,
+  isLoginishField,
+  isOtpField as isAutofillOtpField,
+  usernameFieldFor as usernameDescriptorFor,
+  visibleField,
+  type ButtonDescriptor,
+  type FieldDescriptor,
+  type PageDescriptor,
+} from "@/lib/autofill";
 import type { BgRequest, BgResponse, CredentialMatch, PendingSave } from "@/lib/messages";
 import { sendToBackground } from "@/lib/messages";
 
@@ -38,11 +49,6 @@ export default defineContentScript({
     // retargeted at the boundary — so all discovery walks open shadow roots
     // and event handling uses composedPath().
 
-    function visible(input: HTMLInputElement): boolean {
-      const rect = input.getBoundingClientRect();
-      return rect.width > 40 && rect.height > 10 && !input.disabled && !input.readOnly;
-    }
-
     /** All inputs in flattened document order, descending into open shadow roots. */
     function allInputsDeep(root: ParentNode = document, out: HTMLInputElement[] = []): HTMLInputElement[] {
       for (const element of root.querySelectorAll("*")) {
@@ -52,25 +58,73 @@ export default defineContentScript({
       return out;
     }
 
+    function inputKey(input: HTMLInputElement): string {
+      const inputs = allInputsDeep();
+      return `field-${inputs.indexOf(input)}`;
+    }
+
+    function formKeyFor(input: HTMLInputElement): string | null {
+      if (!input.form) return null;
+      return `form-${Array.from(document.forms).indexOf(input.form)}`;
+    }
+
+    function descriptorFor(input: HTMLInputElement, order: number): FieldDescriptor {
+      const rect = input.getBoundingClientRect();
+      return {
+        key: `field-${order}`,
+        order,
+        type: input.type,
+        name: input.name,
+        id: input.id,
+        autocomplete: input.autocomplete,
+        placeholder: input.placeholder,
+        ariaLabel: input.getAttribute("aria-label") ?? "",
+        formKey: formKeyFor(input),
+        width: rect.width,
+        height: rect.height,
+        disabled: input.disabled,
+        readOnly: input.readOnly,
+      };
+    }
+
+    function pageDescriptor(): PageDescriptor {
+      const inputs = allInputsDeep();
+      const buttons: ButtonDescriptor[] = [];
+      for (const button of document.querySelectorAll('button, input[type="submit"]')) {
+        const form = button instanceof HTMLButtonElement || button instanceof HTMLInputElement ? button.form : null;
+        buttons.push({
+          text: button.textContent ?? "",
+          value: button instanceof HTMLInputElement ? button.value : "",
+          type: button instanceof HTMLButtonElement || button instanceof HTMLInputElement ? button.type : "",
+          formKey: form ? `form-${Array.from(document.forms).indexOf(form)}` : null,
+        });
+      }
+      return {
+        pathname: location.pathname,
+        title: document.title,
+        fields: inputs.map(descriptorFor),
+        buttons,
+      };
+    }
+
+    function descriptorInput(page: PageDescriptor, descriptor: FieldDescriptor | null): HTMLInputElement | null {
+      if (!descriptor) return null;
+      return allInputsDeep()[descriptor.order] ?? null;
+    }
+
+    function visible(input: HTMLInputElement): boolean {
+      return visibleField(descriptorFor(input, allInputsDeep().indexOf(input)));
+    }
+
     function passwordFields(): HTMLInputElement[] {
       return allInputsDeep().filter((input) => input.type === "password" && visible(input));
     }
 
     /** The text/email input that most plausibly holds the username for a password field. */
     function usernameFieldFor(password: HTMLInputElement): HTMLInputElement | null {
-      const all = allInputsDeep().filter(visible);
-      let candidates = all.filter((input) => ["email", "text", "tel"].includes(input.type));
-      if (password.form) {
-        const sameForm = candidates.filter((input) => input.form === password.form);
-        if (sameForm.length > 0) candidates = sameForm;
-      }
-      // Prefer the closest candidate ABOVE the password field in flattened order.
-      const passwordIndex = all.indexOf(password);
-      let best: HTMLInputElement | null = null;
-      for (const candidate of candidates) {
-        if (all.indexOf(candidate) < passwordIndex) best = candidate;
-      }
-      return best ?? candidates[0] ?? null;
+      const page = pageDescriptor();
+      const descriptor = page.fields.find((field) => field.key === inputKey(password)) ?? null;
+      return descriptorInput(page, descriptor ? usernameDescriptorFor(page, descriptor) : null);
     }
 
     /** Real event target, piercing open shadow roots. */
@@ -82,43 +136,19 @@ export default defineContentScript({
     // Login forms get matches (never a generator); signup/change-password
     // forms get generate + email prefill instead.
 
-    function classifyForm(input: HTMLInputElement): "login" | "signup" {
-      const passwords = passwordFields();
-      // Two password fields (password + confirm) is the one unambiguous signal.
-      if (passwords.length >= 2) return "signup";
-      // current-password is honest when present; new-password is NOT trusted —
-      // login pages set it to suppress browser autofill (e.g. expandtesting).
-      for (const field of passwords) {
-        if ((field.autocomplete || "").toLowerCase().includes("current-password")) return "login";
-      }
-      const form = input.closest("form");
-      const scope: ParentNode = form ?? (input.getRootNode() as ParentNode);
-      let buttonText = "";
-      for (const button of scope.querySelectorAll('button, input[type="submit"]')) {
-        buttonText += ` ${button.textContent ?? ""} ${(button as HTMLInputElement).value ?? ""}`;
-      }
-      const haystack = `${buttonText} ${location.pathname} ${document.title}`.toLowerCase();
-      const saysSignup = /sign\s?up|register|create\b.{0,16}account|join now|get started/.test(haystack);
-      const saysLogin = /\blog\s?-?in\b|\bsign\s?-?in\b/.test(haystack);
-      if (saysLogin && !saysSignup) return "login";
-      if (saysSignup) return "signup";
-      if (passwords.some((field) => (field.autocomplete || "").toLowerCase().includes("new-password"))) {
-        return "signup";
-      }
-      return "login";
+    function classifyForm(input: HTMLInputElement): "login" | "signup" | "change-password" {
+      const page = pageDescriptor();
+      const descriptor = page.fields.find((field) => field.key === inputKey(input));
+      return descriptor ? classifyAutofillForm(page, descriptor) : "login";
     }
 
     function isLoginish(input: HTMLInputElement): boolean {
-      if (input.type === "password") return true;
-      const hint = `${input.name} ${input.id} ${input.autocomplete} ${input.placeholder}`.toLowerCase();
-      return /user|email|login|account/.test(hint) || isOtpField(input);
+      return isLoginishField(descriptorFor(input, allInputsDeep().indexOf(input)));
     }
 
     /** 2FA code inputs (the page after a successful password login). */
     function isOtpField(input: HTMLInputElement): boolean {
-      if ((input.autocomplete || "").toLowerCase().includes("one-time-code")) return true;
-      const hint = `${input.name} ${input.id} ${input.placeholder} ${input.getAttribute("aria-label") ?? ""}`.toLowerCase();
-      return /\b(otp|2fa|mfa|totp)\b|one.?time.?(code|password)|verification.?code|security.?code|authenticator/.test(hint);
+      return isAutofillOtpField(descriptorFor(input, allInputsDeep().indexOf(input)));
     }
 
     // ---------- fill ----------
@@ -379,19 +409,9 @@ export default defineContentScript({
     // A standalone email/text box (newsletter, search) gets no icon.
 
     function iconTargets(): HTMLInputElement[] {
-      const targets = new Set<HTMLInputElement>();
-      for (const pw of passwordFields()) {
-        targets.add(pw);
-        const user = usernameFieldFor(pw);
-        if (user) targets.add(user);
-      }
-      for (const input of allInputsDeep()) {
-        if (!visible(input)) continue;
-        const autocomplete = (input.autocomplete || "").toLowerCase();
-        if (autocomplete === "username" || autocomplete.includes("webauthn")) targets.add(input);
-        if (isOtpField(input)) targets.add(input);
-      }
-      return [...targets].slice(0, 6);
+      const inputs = allInputsDeep();
+      const keys = new Set(iconTargetKeys(pageDescriptor()));
+      return inputs.filter((input, order) => keys.has(`field-${order}`));
     }
 
     let iconStatusCache: { status: string; disabled: boolean; at: number } | null = null;

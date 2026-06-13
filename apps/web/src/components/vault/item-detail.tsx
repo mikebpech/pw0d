@@ -191,7 +191,7 @@ export function ItemDetail({
   if (mode === "edit") {
     return (
       <section className={cn("flex min-h-0 min-w-0 flex-col overflow-y-auto", className)}>
-        <div className="mx-auto w-full max-w-xl px-8 py-8">
+        <div className="mx-auto w-full max-w-xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
           <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-muted-foreground">
             {creating ? `new ${TYPE_LABEL[editType]}` : `edit ${TYPE_LABEL[editType]}`}
           </h2>
@@ -282,7 +282,7 @@ export function ItemDetail({
 
             {editType === "ssh" && (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Host">
                     <Input
                       className="font-mono"
@@ -364,7 +364,7 @@ export function ItemDetail({
                 value={draft.folderId}
                 onValueChange={(value) => setDraft({ ...draft, folderId: (value as string) ?? NO_FOLDER })}
               >
-                <SelectTrigger className="w-56">
+                <SelectTrigger className="w-full sm:w-56">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -378,7 +378,7 @@ export function ItemDetail({
               </Select>
             </Field>
 
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <Button onClick={() => void handleSave()} disabled={busy || !draft.name.trim()}>
                 {busy ? "Encrypting…" : "Save"}
               </Button>
@@ -400,17 +400,17 @@ export function ItemDetail({
 
   return (
     <section className={cn("flex min-h-0 min-w-0 flex-col overflow-y-auto", className)}>
-      <div className="mx-auto w-full max-w-xl px-8 py-8">
-        <div className="mb-8 flex items-start gap-4">
+      <div className="mx-auto w-full max-w-xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <div className="mb-6 flex items-start gap-3 sm:mb-8 sm:gap-4">
           <ItemIcon
             name={item.data.name}
             type={item.type}
             data={item.data}
-            className="size-12 text-lg"
+            className="size-10 text-base sm:size-12 sm:text-lg"
             imgClassName="size-7"
           />
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-xl font-semibold">{item.data.name}</h2>
+            <h2 className="truncate text-lg font-semibold sm:text-xl">{item.data.name}</h2>
             <div className="mt-1 flex items-center gap-2">
               <Badge variant="secondary" className="font-mono text-[11px] uppercase">
                 {TYPE_LABEL[item.type]}
@@ -533,7 +533,7 @@ function ValueRow({
 }) {
   if (!value) return null;
   return (
-    <div className="group flex items-center gap-3 px-4 py-3">
+    <div className="group flex items-center gap-3 px-3 py-3 sm:px-4">
       <div className="min-w-0 flex-1">
         <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground/60">
           {label}
@@ -559,7 +559,7 @@ function ValueRow({
           </div>
         )}
       </div>
-      <div className="opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <CopyButton value={value} label={copyLabel} />
       </div>
     </div>
@@ -582,7 +582,7 @@ function SecretRow({
   if (!value) return null;
   const strength = showStrength ? scorePassword(value) : null;
   return (
-    <div className="group flex items-start gap-3 px-4 py-3">
+    <div className="group flex items-start gap-3 px-3 py-3 sm:px-4">
       <div className="min-w-0 flex-1">
         <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground/60">
           {label}
@@ -607,7 +607,7 @@ function SecretRow({
           {["very weak", "weak", "okay", "good", "strong"][strength.score]}
         </Badge>
       )}
-      <div className="flex opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <Button
           variant="ghost"
           size="icon-sm"

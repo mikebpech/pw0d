@@ -11,7 +11,7 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center px-4">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-px panel-edge"

@@ -33,7 +33,7 @@ export function UnlockScreen() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="flex w-full max-w-xs flex-col items-center reveal">
         <div
           className={cn(

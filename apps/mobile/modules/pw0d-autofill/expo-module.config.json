@@ -1,0 +1,6 @@
+{
+  "platforms": ["apple"],
+  "apple": {
+    "modules": ["Pw0dAutofillModule"]
+  }
+}

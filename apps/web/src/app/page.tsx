@@ -22,7 +22,7 @@ export default function Home() {
   if (status === "unlocked") return <VaultShell />;
   if (status === "locked") return <UnlockScreen />;
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-dvh items-center justify-center">
       <span className="font-mono text-sm text-muted-foreground animate-pulse">pw0d</span>
     </div>
   );

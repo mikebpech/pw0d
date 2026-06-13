@@ -1,0 +1,44 @@
+{
+  "name": "@pw0d/mobile",
+  "version": "0.0.1",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "eas:build:dev": "eas build --profile development",
+    "eas:build:preview": "eas build --profile preview",
+    "eas:build:production": "eas build --profile production"
+  },
+  "dependencies": {
+    "@pw0d/api-client": "workspace:*",
+    "@pw0d/core": "workspace:*",
+    "@pw0d/crypto": "workspace:*",
+    "@react-native-community/slider": "^5.0.0",
+    "expo": "^56.0.0",
+    "expo-clipboard": "^56.0.4",
+    "expo-haptics": "^56.0.3",
+    "expo-local-authentication": "^56.0.4",
+    "expo-modules-core": "^56.0.0",
+    "expo-router": "^56.2.10",
+    "expo-secure-store": "^56.0.4",
+    "expo-status-bar": "^56.0.4",
+    "react": "19.2.3",
+    "react-native": "0.85.0",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-quick-base64": "^2.1.2",
+    "react-native-quick-crypto": "^0.7.0",
+    "react-native-safe-area-context": "^5.8.0",
+    "react-native-screens": "^4.25.2",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@bacons/apple-targets": "^4.0.0",
+    "@types/react": "~19.2.0",
+    "eas-cli": "^20.1.0",
+    "typescript": "^5.9.0"
+  }
+}
