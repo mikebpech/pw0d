@@ -217,15 +217,15 @@ export function VaultShell() {
               </Button>
             }
           />
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-              <Settings /> Account &amp; security…
+              <Settings /> <span className="min-w-0 flex-1 truncate">Account &amp; security…</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setImportOpen(true)}>
-              <Upload /> Import passwords…
+              <Upload /> <span className="min-w-0 flex-1 truncate">Import passwords…</span>
             </DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onClick={() => void logout()}>
-              <LogOut /> Log out
+              <LogOut /> <span className="min-w-0 flex-1 truncate">Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -381,25 +381,25 @@ export function VaultShell() {
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end" side="top">
+              <DropdownMenuContent align="end" side="top" className="w-72">
                 <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-                  <Settings /> Account &amp; security…
+                  <Settings /> <span className="min-w-0 flex-1 truncate">Account &amp; security…</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => window.open("/install", "_blank")}>
-                  <Puzzle /> Get the browser extension…
+                  <Puzzle /> <span className="min-w-0 flex-1 truncate">Get the browser extension…</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setImportOpen(true)}>
-                  <Upload /> Import passwords…
+                  <Upload /> <span className="min-w-0 flex-1 truncate">Import passwords…</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportJson(items, folders)}>
-                  <Download /> Export JSON
+                  <Download /> <span className="min-w-0 flex-1 truncate">Export JSON</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => exportCsv(items, folders)}>
-                  <Download /> Export CSV
+                  <Download /> <span className="min-w-0 flex-1 truncate">Export CSV</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" onClick={() => void logout()}>
-                  <LogOut /> Log out
+                  <LogOut /> <span className="min-w-0 flex-1 truncate">Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

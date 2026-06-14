@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useVault, vaultApi } from "@/lib/store";
 
 export function SettingsDialog({
@@ -39,41 +40,140 @@ export function SettingsDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[min(760px,calc(100vh-2rem))] max-w-2xl overflow-y-auto p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle>Account &amp; security</DialogTitle>
           <DialogDescription>Manage your master password, 2FA, and sessions.</DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="password">
-          <TabsList className="w-full">
-            <TabsTrigger value="password" className="flex-1">
+        <Tabs defaultValue="password" className="gap-4">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/70 p-1 sm:grid-cols-5">
+            <TabsTrigger value="password" className="h-9 px-3">
               Password
             </TabsTrigger>
-            <TabsTrigger value="2fa" className="flex-1">
+            <TabsTrigger value="2fa" className="h-9 px-3">
               Two-factor
             </TabsTrigger>
-            <TabsTrigger value="recovery" className="flex-1">
+            <TabsTrigger value="recovery" className="h-9 px-3">
               Recovery
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex-1">
+            <TabsTrigger value="mobile" className="h-9 px-3">
+              Mobile
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="h-9 px-3">
               Sessions
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="password" className="pt-4">
+          <TabsContent value="password">
             <ChangePasswordPanel />
           </TabsContent>
-          <TabsContent value="2fa" className="pt-4">
+          <TabsContent value="2fa">
             <TwoFactorPanel />
           </TabsContent>
-          <TabsContent value="recovery" className="pt-4">
+          <TabsContent value="recovery">
             <RecoveryPanel open={open} />
           </TabsContent>
-          <TabsContent value="sessions" className="pt-4">
+          <TabsContent value="mobile">
+            <MobilePairingPanel />
+          </TabsContent>
+          <TabsContent value="sessions">
             <SessionsPanel open={open} />
           </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MobilePairingPanel() {
+  const createMobilePairingCode = useVault((state) => state.createMobilePairingCode);
+  const [serverUrl, setServerUrl] = useState("");
+  const [code, setCode] = useState("");
+  const [qr, setQr] = useState<string | null>(null);
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/i.test(serverUrl.trim());
+
+  useEffect(() => {
+    setServerUrl(window.location.origin);
+  }, []);
+
+  useEffect(() => {
+    if (!code) {
+      setQr(null);
+      return;
+    }
+    void import("qrcode").then((qrcode) =>
+      qrcode
+        .toDataURL(code, { errorCorrectionLevel: "L", margin: 2, width: 360 })
+        .then(setQr)
+        .catch(() => toast.error("pairing code is too large for a QR code")),
+    );
+  }, [code]);
+
+  function generate() {
+    try {
+      const next = createMobilePairingCode(serverUrl);
+      setCode(next);
+      void navigator.clipboard.writeText(next).then(() => toast.success("mobile pairing code copied"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "couldn't create pairing code");
+    }
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,360px)]">
+      <div className="flex min-w-0 flex-col gap-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-medium">Pair Expo Go</h3>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Scan this from the mobile app to import the current unlocked session for development.
+            The QR contains your vault key, so use it only on your own device.
+          </p>
+        </div>
+        <Label htmlFor="mobile-url" className="text-sm">Server URL</Label>
+        <Input
+          id="mobile-url"
+          value={serverUrl}
+          onChange={(event) => setServerUrl(event.target.value)}
+          placeholder="https://vault.example.com"
+          inputMode="url"
+        />
+        {isLocalhost ? (
+          <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-200">
+            Your phone cannot reach this `localhost`. Use your Mac&apos;s LAN IP or your deployed domain before generating the QR.
+          </p>
+        ) : (
+          <p className="text-xs leading-5 text-muted-foreground">
+            Use a URL your phone can reach, like your LAN IP or deployed domain.
+          </p>
+        )}
+        <Button onClick={generate} className="self-start">
+          <Smartphone /> Generate QR
+        </Button>
+      </div>
+
+      <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-lg border border-border/80 bg-card/50 p-4">
+        {code ? (
+          <>
+          <div className="flex w-full max-w-[360px] items-center justify-center rounded-md bg-white p-3">
+            {qr ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qr} alt="Mobile pairing QR code" width={360} height={360} className="h-auto w-full" />
+            ) : (
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          <details className="w-full">
+            <summary className="cursor-pointer text-center text-xs font-medium text-muted-foreground">Manual code</summary>
+            <Textarea id="mobile-code" readOnly value={code} className="mt-2 min-h-24 font-mono text-xs" />
+          </details>
+          </>
+        ) : (
+          <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+            <Smartphone className="size-8 text-primary" />
+            Generate a QR code, then scan it from the mobile app.
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

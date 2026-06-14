@@ -36,6 +36,19 @@ interface PersistedSession {
   tokens: Tokens | null;
 }
 
+interface MobilePairingPayload {
+  v: 1;
+  u: string;
+  e: string;
+  k: KdfParams;
+  p: string;
+  t: {
+    a: string;
+    r: string;
+  };
+  ak: string;
+}
+
 function loadSession(): PersistedSession | null {
   if (typeof window === "undefined") return null;
   try {
@@ -115,6 +128,14 @@ interface VaultState {
   changeMasterPassword: (current: string, next: string) => Promise<void>;
   /** Generate a recovery code, wrap the Account Key under it, store server-side. */
   setupRecovery: () => Promise<string>;
+  createMobilePairingCode: (serverUrl?: string) => string;
+}
+
+function encodePairingPayload(payload: MobilePairingPayload): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
 function deviceName(): string {
@@ -390,6 +411,25 @@ export const useVault = create<VaultState>((set, get) => ({
     const recoveryKeyBlob = await wrapKey(accountKey, encKey);
     await api().recoverySetup(recoveryKeyBlob, toBase64(authKey));
     return code;
+  },
+
+  createMobilePairingCode: (serverUrl) => {
+    const { accountKey } = get();
+    const session = loadSession();
+    if (!accountKey || !session || !session.tokens) throw new CryptoError("unlock your vault before pairing mobile");
+    const origin = serverUrl?.trim().replace(/\/$/, "") || window.location.origin;
+    return encodePairingPayload({
+      v: 1,
+      u: origin,
+      e: session.email,
+      k: session.kdfParams,
+      p: session.protectedAccountKey,
+      t: {
+        a: session.tokens.accessToken,
+        r: session.tokens.refreshToken,
+      },
+      ak: toBase64(accountKey),
+    });
   },
 }));
 
